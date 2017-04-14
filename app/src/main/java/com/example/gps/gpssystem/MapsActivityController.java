@@ -147,7 +147,7 @@ public class MapsActivityController extends FragmentActivity implements OnMapRea
             //Reconnect to google maps
             mGoogleApiClient.reconnect();
         }
-       stopService(new Intent(this, locationService.class));
+      // stopService(new Intent(this, locationService.class));
         super.onResume();
     }
 
