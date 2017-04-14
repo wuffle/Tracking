@@ -69,30 +69,29 @@ public class MapsActivityController extends FragmentActivity implements OnMapRea
         toast = new ToastsModel(this);
         mapFrag = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
-        checkTracking();//Listen for switch schange
         tracking = true;
         //By default tracking is on so begin timer when journey is created
         journ = new Journey();
         journeys = new Journeys();
         eM = new EditMapModel();
-        journeyButton();//Listen for button press
         pref = new sharedpreferences();//Initialize preferences
         listClick();//Listen for listview click
+        checkTracking();//Listen for switch schange
+        journeyButton();//Listen for button press
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
                 journeys.getJourney());
 
+        //Listen for service to send location data
+        mReceiver = new BroadcastReceiver() {
+            @Override
+           public void onReceive(Context context, Intent intent) {
+                temp= intent.getExtras().getParcelable("Location");
+            }
+        };
+
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mReceiver, new IntentFilter("UpdateLocation"));
-
-        //Listen for service to send location data
-//        mReceiver = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                System.out.println("Recieved");
-//                temp= (Journey) intent.getExtras().getParcelable("Location");
-//            }
-//        };
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -132,8 +131,10 @@ public class MapsActivityController extends FragmentActivity implements OnMapRea
         if (!tracking) {
             finish();
         }
+        //LocationServices.FusedLocationApi.removeLocationUpdates(
+               // mGoogleApiClient, this);//Stop tracking
         //Run service in background to keep track of location
-        //startService(new Intent(this, locationService.class));
+        startService(new Intent(this, locationService.class));
         super.onPause();
     }
 
@@ -146,7 +147,7 @@ public class MapsActivityController extends FragmentActivity implements OnMapRea
             //Reconnect to google maps
             mGoogleApiClient.reconnect();
         }
-        //stopService(new Intent(this, locationService.class));
+       stopService(new Intent(this, locationService.class));
         super.onResume();
     }
 
@@ -203,7 +204,6 @@ public class MapsActivityController extends FragmentActivity implements OnMapRea
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
     }
 
     //Get permisson if dont currently have
